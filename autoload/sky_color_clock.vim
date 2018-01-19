@@ -246,7 +246,7 @@ let s:pi = 3.14159265359
 
 let g:sky_color_clock#latitude        = get(g:, 'sky_color_clock#latitude', 35)
 let g:sky_color_clock#color_stops     = get(g:, 'sky_color_clock#color_stops', s:default_color_stops())
-let g:sky_color_clock#datetime_format = get(g:, 'sky_color_clock#datetime_format', '%H:%M')
+let g:sky_color_clock#datetime_format = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
 
 
 " let g:cs = []
