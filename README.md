@@ -1,5 +1,6 @@
 ## sky-color-clock.vim
-This plugin is inspired by [zk-phi/sky-color-clock: [Emacs] A clock widget for modeline with sky color at the time and moonphase icon](https://github.com/zk-phi/sky-color-clock).
+This plugin is inspired by [zk-phi/sky-color-clock: [Emacs] A clock widget for modeline with sky color at the time and moonphase icon](https://github.com/zk-phi/sky-color-clock).  
+Great, thanks to [zk-phi](https://github.com/zk-phi) !
 
 ## Feature
 - [X] A clock widget for statusline with sky color at the time.
