@@ -13,6 +13,16 @@ call dein#add('mopp/sky-color-clock.vim')
 " set statusline to enable this plugin.
 set statusline+=%#SkyColorClock#%{sky_color_clock#statusline()}
 
+" For lightline.vim
+let g:lightline = {
+            \ 'component': {
+            \   'sky_color_clock': "%#SkyColorClock#%{' ' . sky_color_clock#statusline() . ' '}",
+            \ },
+            \ 'component_raw': {
+            \   'sky_color_clock': 1,
+            \ },
+            \ }
+
 " For only test
 let g:sky_color_clock#timestamp_force_override = 1516201200 + 12 * 60 * 60 " 12:00:00
 
