@@ -3,6 +3,7 @@ This plugin is inspired by [zk-phi/sky-color-clock: [Emacs] A clock widget for m
 
 ## Feature
 - [X] A clock widget for statusline with sky color at the time.
+- [X] Moonphase emoji
 
 ## installation
 ```vim

@@ -224,6 +224,18 @@ function! s:pick_fg_color(bg_color) abort
     return s:to_rgb_string(s:hsl_to_rgb([h, s, new_l]))
 endfunction
 
+function! s:get_emoji_moonphase(timestamp) abort
+    let time_in_days = a:timestamp / (24.0 * 60.0 * 60.0)
+    let current_phase = fmod(time_in_days - s:new_moon_base_timestamp, s:moonphase_cycle)
+
+    for [phase, emoji] in s:moonphase_emojis
+        if current_phase <= phase
+            return emoji
+        endif
+    endfor
+
+    return s:moonphase_emojis[-1][1]
+endfunction
 
 function! sky_color_clock#statusline() abort
     let now = get(g:, 'sky_color_clock#timestamp_force_override', localtime())
@@ -237,26 +249,56 @@ function! sky_color_clock#statusline() abort
     " Update highlight.
     execute printf('hi SkyColorClock guifg=%s guibg=%s ctermfg=%d ctermbg=%d ', fg, bg, fg_t, bg_t)
 
-    " Return statusline string.
-    return strftime(g:sky_color_clock#datetime_format, now)
+    let str = strftime(g:sky_color_clock#datetime_format, now)
+
+    if g:sky_color_clock#enable_emoji_icon != 0
+        let str = printf("%s %s", s:get_emoji_moonphase(now), str)
+    endif
+
+    return str
 endfunction
 
 
+" Local immutable variables.
+let s:is_debug = 0
 let s:pi = 3.14159265359
+let s:moonphase_cycle = 29.5306 " Eclipse (synodic month) cycle in days.
+let s:new_moon_base_timestamp = 6.8576 " A new moon (1970/01/08 05:35) in days since the epoch.
+let s:moonphase_emojis = [
+            \ [ 1.84, '🌑'],
+            \ [ 5.53, '🌒'],
+            \ [ 9.22, '🌓'],
+            \ [12.91, '🌔'],
+            \ [16.61, '🌕'],
+            \ [20.30, '🌖'],
+            \ [23.99, '🌗'],
+            \ [27.68, '🌘'],
+            \ ]
 
-let g:sky_color_clock#latitude        = get(g:, 'sky_color_clock#latitude', 35)
-let g:sky_color_clock#color_stops     = get(g:, 'sky_color_clock#color_stops', s:default_color_stops())
-let g:sky_color_clock#datetime_format = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
+let g:sky_color_clock#latitude          = get(g:, 'sky_color_clock#latitude', 35)
+let g:sky_color_clock#color_stops       = get(g:, 'sky_color_clock#color_stops', s:default_color_stops())
+let g:sky_color_clock#datetime_format   = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
+let g:sky_color_clock#enable_emoji_icon = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
 
 
-" let g:cs = []
-" for h in range(1, 24)
-"     let g:cs += [
-"                 \ s:pick_bg_color(1516201200 + h * 60 * 60),
-"                 \ s:pick_bg_color(1516201200 + h * 60 * 60 + 15 * 60),
-"                 \ s:pick_bg_color(1516201200 + h * 60 * 60 + 30 * 60),
-"                 \ s:pick_bg_color(1516201200 + h * 60 * 60 + 45 * 60)]
-" endfor
+if s:is_debug
+    let g:cs = []
+    for h in range(1, 24)
+        let g:cs += [
+                    \ s:pick_bg_color(1516201200 + h * 60 * 60),
+                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 15 * 60),
+                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 30 * 60),
+                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 45 * 60)]
+    endfor
+
+    call assert_equal('🌑', s:get_emoji_moonphase(592500))
+    call assert_equal('🌑', s:get_emoji_moonphase(1516155430))
+    call assert_equal('🌓', s:get_emoji_moonphase(1516846630))
+    if !empty(v:errors)
+        echoerr string(v:errors)
+    endif
+endif
+
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
