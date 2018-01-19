@@ -19,4 +19,5 @@ let g:sky_color_clock#timestamp_force_override = 1516201200 + 12 * 60 * 60 " 12:
 let g:sky_color_clock#latitude
 let g:sky_color_clock#color_stops
 let g:sky_color_clock#datetime_format
+let g:sky_color_clock#enable_emoji_icon
 ```
