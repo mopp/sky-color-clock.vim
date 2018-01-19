@@ -224,6 +224,7 @@ function! s:pick_fg_color(bg_color) abort
     return s:to_rgb_string(s:hsl_to_rgb([h, s, new_l]))
 endfunction
 
+
 function! s:get_emoji_moonphase(timestamp) abort
     let time_in_days = a:timestamp / (24.0 * 60.0 * 60.0)
     let current_phase = fmod(time_in_days - s:new_moon_base_timestamp, s:moonphase_cycle)
@@ -236,6 +237,7 @@ function! s:get_emoji_moonphase(timestamp) abort
 
     return s:moonphase_emojis[-1][1]
 endfunction
+
 
 function! sky_color_clock#statusline() abort
     let now = get(g:, 'sky_color_clock#timestamp_force_override', localtime())
