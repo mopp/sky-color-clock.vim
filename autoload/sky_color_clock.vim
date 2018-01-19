@@ -114,11 +114,10 @@ function! s:rgb_to_hsl(rgb) abort
 
     return [h, s, l]
 endfunction
-call assert_equal([0.0, 1.0, 0.5], s:rgb_to_hsl([1.0, 0.0, 0.0]))
 
 
 function! s:hue_to_rgb(p, q, t) abort
-    let t = 0.0
+    let t = a:t
     if 1.0 < a:t
         let t = a:t - 1.0
     elseif a:t < 0.0
@@ -136,17 +135,11 @@ endfunction
 function! s:hsl_to_rgb(hsl) abort
     let [h, s, l] = a:hsl
 
-    if abs(s) < 0.1e-10
-        let r = l
-        let g = l
-        let b = l
-    else
-        let q = l <= 0.5 ? l * (1.0 + s) : l + s - l * s
-        let p = 2.0 * l - q
-        let r = s:hue_to_rgb(p, q, h + 1.0 / 3.0)
-        let g = s:hue_to_rgb(p, q, h)
-        let b = s:hue_to_rgb(p, q, h - 1.0 / 3.0)
-    endif
+    let q = l <= 0.5 ? l * (1.0 + s) : l + s - l * s
+    let p = 2.0 * l - q
+    let r = s:hue_to_rgb(p, q, h + 1.0 / 3.0)
+    let g = s:hue_to_rgb(p, q, h)
+    let b = s:hue_to_rgb(p, q, h - 1.0 / 3.0)
 
     return [r, g, b]
 endfunction
@@ -163,9 +156,9 @@ endfunction
 " (float, float, float) -> string.
 function! s:to_rgb_string(rgb) abort
     let [r, g, b] = a:rgb
-    let r = float2nr(r * 255.0)
-    let g = float2nr(g * 255.0)
-    let b = float2nr(b * 255.0)
+    let r = float2nr(ceil(r * 255.0))
+    let g = float2nr(ceil(g * 255.0))
+    let b = float2nr(ceil(b * 255.0))
     return printf('#%02x%02x%02x', r, g, b)
 endfunction
 
@@ -262,7 +255,6 @@ endfunction
 
 
 " Local immutable variables.
-let s:is_debug = 0
 let s:pi = 3.14159265359
 let s:moonphase_cycle = 29.5306 " Eclipse (synodic month) cycle in days.
 let s:new_moon_base_timestamp = 6.8576 " A new moon (1970/01/08 05:35) in days since the epoch.
@@ -283,7 +275,8 @@ let g:sky_color_clock#datetime_format   = get(g:, 'sky_color_clock#datetime_form
 let g:sky_color_clock#enable_emoji_icon = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
 
 
-if s:is_debug
+let s:enable_test = 0
+if s:enable_test
     let g:cs = []
     for h in range(1, 24)
         let g:cs += [
@@ -293,11 +286,31 @@ if s:is_debug
                     \ s:pick_bg_color(1516201200 + h * 60 * 60 + 45 * 60)]
     endfor
 
+    call assert_equal('#000000', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 0.0])))
+    call assert_equal('#ffffff', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 1.0])))
+    call assert_equal('#ff0000', s:to_rgb_string(s:hsl_to_rgb([0.0, 1.0, 0.5])))
+    call assert_equal('#00ff00', s:to_rgb_string(s:hsl_to_rgb([120.0 / 360.0, 1.0, 0.5])))
+    call assert_equal('#0000ff', s:to_rgb_string(s:hsl_to_rgb([240.0 / 360.0, 1.0, 0.5])))
+    call assert_equal('#ffff00', s:to_rgb_string(s:hsl_to_rgb([60.0 / 360.0, 1.0, 0.5])))
+    call assert_equal('#00ffff', s:to_rgb_string(s:hsl_to_rgb([180.0 / 360.0, 1.0, 0.5])))
+    call assert_equal('#ff00ff', s:to_rgb_string(s:hsl_to_rgb([300.0 / 360.0, 1.0, 0.5])))
+    call assert_equal('#c0c0c0', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 0.75])))
+    call assert_equal('#808080', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 0.50])))
+    call assert_equal('#800000', s:to_rgb_string(s:hsl_to_rgb([0.0, 1.0, 0.25])))
+    call assert_equal('#808000', s:to_rgb_string(s:hsl_to_rgb([60.0 / 360.0, 1.0, 0.25])))
+    call assert_equal('#008000', s:to_rgb_string(s:hsl_to_rgb([120.0 / 360.0, 1.0, 0.25])))
+    call assert_equal('#800080', s:to_rgb_string(s:hsl_to_rgb([300.0 / 360.0, 1.0, 0.25])))
+    call assert_equal('#008080', s:to_rgb_string(s:hsl_to_rgb([180.0 / 360.0, 1.0, 0.25])))
+    call assert_equal('#000080', s:to_rgb_string(s:hsl_to_rgb([240.0 / 360.0, 1.0, 0.25])))
+
     call assert_equal('🌑', s:get_emoji_moonphase(592500))
     call assert_equal('🌑', s:get_emoji_moonphase(1516155430))
     call assert_equal('🌓', s:get_emoji_moonphase(1516846630))
+
     if !empty(v:errors)
-        echoerr string(v:errors)
+        for err in v:errors
+            echoerr string(err)
+        endfor
     endif
 endif
 
