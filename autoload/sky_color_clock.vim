@@ -88,28 +88,43 @@ endfunction
 " https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
 " [float] -> [float].
 function! s:rgb_to_hsl(rgb) abort
-    let [r, g, b] = a:rgb
-
-    let max = (g < r && b < r) ? (r) : (r < g && b < g) ? (g) : (b)
-    let min = (r < g && r < b) ? (r) : (g < r && g < b) ? (g) : (b)
-    let l = (max + min) / 2.0
-
-    if (max == min)
-        let h = 0.0
-        let s = 0.0
-    else
-        let d = max - min
-        let s = (0.5 < l) ? (d / (2.0 - d)) : (d / (max + min))
-
-        if max == r
-            let h = (g - b) / d + (g < b ? 6.0 : 0.0)
-        elseif max == g
-            let h = (b - r) / d + 2.0
-        elseif max == b
-            let h = (r - g) / d + 4.0
+    let max = 0.0
+    let min = 1.0
+    for c in a:rgb
+        if max < c
+            let max = c
         endif
+        if c < min
+            let min = c
+        endif
+    endfor
 
-        let h = h / 6.0
+    let l = (max + min) / 2.0
+    let delta = max - min
+
+    if abs(delta) <= 1.0e-10
+        return [0.0, 0.0, l]
+    endif
+
+    let s = (l <= 0.5) ? (delta / (max + min)) : (delta / (2.0 - max - min))
+
+    let [r, g, b] = a:rgb
+    let rc = (max - r) / delta
+    let gc = (max - g) / delta
+    let bc = (max - b) / delta
+
+    if max == r
+        let h = bc - gc
+    elseif max == g
+        let h = 2.0 + rc - bc
+    else
+        let h = 4.0 + gc - rc
+    endif
+
+    let h = fmod(h / 6.0, 1.0)
+
+    if h < 0.0
+        let h = 1.0 + h
     endif
 
     return [h, s, l]
@@ -277,14 +292,16 @@ let g:sky_color_clock#enable_emoji_icon = get(g:, 'sky_color_clock#enable_emoji_
 
 let s:enable_test = 0
 if s:enable_test
-    let g:cs = []
+    let g:bg = []
     for h in range(1, 24)
-        let g:cs += [
+        let g:bg += [
                     \ s:pick_bg_color(1516201200 + h * 60 * 60),
                     \ s:pick_bg_color(1516201200 + h * 60 * 60 + 15 * 60),
                     \ s:pick_bg_color(1516201200 + h * 60 * 60 + 30 * 60),
                     \ s:pick_bg_color(1516201200 + h * 60 * 60 + 45 * 60)]
     endfor
+    let g:fg = map(copy(g:bg), 's:pick_fg_color(v:val)')
+    let g:fg_bg = map(range(0, len(g:fg) - 1), '[g:fg[v:val], g:bg[v:val]]')
 
     call assert_equal('#000000', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 0.0])))
     call assert_equal('#ffffff', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 1.0])))
@@ -302,6 +319,23 @@ if s:enable_test
     call assert_equal('#800080', s:to_rgb_string(s:hsl_to_rgb([300.0 / 360.0, 1.0, 0.25])))
     call assert_equal('#008080', s:to_rgb_string(s:hsl_to_rgb([180.0 / 360.0, 1.0, 0.25])))
     call assert_equal('#000080', s:to_rgb_string(s:hsl_to_rgb([240.0 / 360.0, 1.0, 0.25])))
+
+    " call assert_equal([0.0,           0.0, 0.00], s:rgb_to_hsl(s:parse_rgb('#000000')))
+    " call assert_equal([0.0,           0.0, 1.00], s:rgb_to_hsl(s:parse_rgb('#ffffff')))
+    " call assert_equal([0.0,           1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#ff0000')))
+    " call assert_equal([120.0 / 360.0, 1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#00ff00')))
+    " call assert_equal([240.0 / 360.0, 1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#0000ff')))
+    " call assert_equal([60.0 / 360.0,  1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#ffff00')))
+    " call assert_equal([180.0 / 360.0, 1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#00ffff')))
+    " call assert_equal([300.0 / 360.0, 1.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#ff00ff')))
+    " call assert_equal([0.0,           0.0, 0.75], s:rgb_to_hsl(s:parse_rgb('#c0c0c0')))
+    " call assert_equal([0.0,           0.0, 0.50], s:rgb_to_hsl(s:parse_rgb('#808080')))
+    " call assert_equal([0.0,           1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#800000')))
+    " call assert_equal([60.0 / 360.0,  1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#808000')))
+    " call assert_equal([120.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#008000')))
+    " call assert_equal([300.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#800080')))
+    " call assert_equal([180.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#008080')))
+    " call assert_equal([240.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#000080')))
 
     call assert_equal('🌑', s:get_emoji_moonphase(592500))
     call assert_equal('🌑', s:get_emoji_moonphase(1516155430))
