@@ -57,31 +57,55 @@ endfunction
 
 
 " https://github.com/Qix-/color-convert/blob/427cbb70540bb9e5b3e94aa3bb9f97957ee5fbc0/conversions.js#L555-L580
-" [float] -> number.
+" https://stackoverflow.com/a/39277954
+" https://stackoverflow.com/a/41978310
+" https://github.com/tmux/tmux/blob/591b26e46f48f2e6b59f97e6cfb037c6fec48e15/colour.c#L57
+" string -> number.
+let s:q2c = [0, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
 function! s:to_ansi256_color(rgb) abort
-    let r = float2nr(255.0 * a:rgb[0])
-    let g = float2nr(255.0 * a:rgb[1])
-    let b = float2nr(255.0 * a:rgb[2])
+    let rgb = s:parse_rgb(a:rgb)
+    let r = float2nr(rgb[0] * 255.0)
+    let g = float2nr(rgb[1] * 255.0)
+    let b = float2nr(rgb[2] * 255.0)
 
-    if (r == g) && (g == b)
-        if (r < 8)
-            return 16
-        elseif (248 < r)
-            return 231
-        else
-            return float2nr(round(((r - 8.0) / 247.0) * 24.0) + 232.0)
-        endif
+    let qr = s:color_to_6cube(r)
+    let qg = s:color_to_6cube(g)
+    let qb = s:color_to_6cube(b)
+    let cr = s:q2c[qr]
+    let cg = s:q2c[qg]
+    let cb = s:q2c[qb]
+
+    if cr == r && cg == g && cb == b
+        return (16 + (36 * qr) + (6 * qg) + qb)
     endif
 
-    " 16 + 36 × r + 6 × g + b (0 ≤ r, g, b ≤ 5)
-    " https://stackoverflow.com/a/39277954
-    let ansi256 = 16 +
-                \ 36 * (round(r / 255.0 * 5)) +
-                \  6 * (round(g / 255.0 * 5)) +
-                \       round(b / 255.0 * 5)
+    let grey_avg   = (r + g + b) / 3
+    let gray_index = 238 < grey_avg ? 23 : (grey_avg - 3) / 10
+    let grey       = 8 + 10 * gray_index
 
-    return float2nr(ansi256)
+    let rgb       = [r, g, b]
+    let color_err = s:dist(rgb, [cr, cg, cb])
+    let gray_err  = s:dist(rgb, [grey, grey, grey])
+
+    return color_err <= gray_err ? (16 + (36 * qr + 6 * qg + qb)) : (232 + gray_index)
 endfunction
+
+
+function! s:dist(v1, v2) abort
+    let sum = 0
+    let len = len(a:v1) - 1
+    for i in range(0, len)
+        let sum = sum + pow(a:v1[i] - a:v2[i], 2)
+    endfor
+
+    return sum / len
+endfunction
+
+
+function! s:color_to_6cube(v) abort
+    return a:v < 48 ? 0 : a:v < 114 ? 1 : (a:v - 35) / 40
+endfunction
+
 
 
 " https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
@@ -251,8 +275,8 @@ function! s:get_sky_colors(timestamp) abort
     let fg = s:pick_fg_color(bg)
 
     " Convert the RGB string into ANSI 256 color.
-    let bg_t = s:to_ansi256_color(s:parse_rgb(bg))
-    let fg_t = s:to_ansi256_color(s:parse_rgb(fg))
+    let bg_t = s:to_ansi256_color(bg)
+    let fg_t = s:to_ansi256_color(fg)
 
     return [fg, bg, fg_t, bg_t]
 endfunction
