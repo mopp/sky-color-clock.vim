@@ -4,9 +4,11 @@ Great, thanks to [zk-phi](https://github.com/zk-phi) !
 
 ## Examples
 For terminal.
+
 [[file:./images/cui.png]]
 
 For graphical.
+
 [[file:./images/gui.png]]
 
 ## Feature
