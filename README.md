@@ -2,6 +2,13 @@
 This plugin is inspired by [zk-phi/sky-color-clock: [Emacs] A clock widget for modeline with sky color at the time and moonphase icon](https://github.com/zk-phi/sky-color-clock).  
 Great, thanks to [zk-phi](https://github.com/zk-phi) !
 
+## Examples
+For terminal.
+[[file:./images/cui.png]]
+
+For graphical.
+[[file:./images/gui.png]]
+
 ## Feature
 - [X] A clock widget for statusline with sky color at the time.
 - [X] Moonphase emoji
