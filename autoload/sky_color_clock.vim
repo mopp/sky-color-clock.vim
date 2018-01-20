@@ -11,8 +11,8 @@ set cpo&vim
 
 
 
-function! s:default_color_stops() abort
-    let sunset_time_from_noon = s:get_sunset_time_from_noon()
+function! s:default_color_stops(timestamp) abort
+    let sunset_time_from_noon = s:get_sunset_time_from_noon(a:timestamp)
     let sunrise = 12 - sunset_time_from_noon
     let sunset = 12 + sunset_time_from_noon
     return [
@@ -44,11 +44,10 @@ function! s:deg_to_rad(d) abort
 endfunction
 
 
-function! s:get_sunset_time_from_noon() abort
-    let now            = localtime()
-    let current_year   = str2nr(strftime('%Y', localtime()))
+function! s:get_sunset_time_from_noon(timestamp) abort
+    let current_year   = str2nr(strftime('%Y', a:timestamp))
     let leap_count     = count(map(range(1970, current_year - 1), 'v:val % 400 == 0 || (v:val % 4 == 0 && v:val % 100 != 0)'), 1)
-    let day_of_year    = float2nr(localtime() / (24 * 60 * 60)) % 365 - leap_count
+    let day_of_year    = float2nr(a:timestamp / (24 * 60 * 60)) % 365 - leap_count - 1
 
     let latitude = g:sky_color_clock#latitude
     let sun_declination = s:deg_to_rad(-23.44 * (cos(s:deg_to_rad((360 / 365.0) * (day_of_year + 10)))))
@@ -247,14 +246,22 @@ function! s:get_emoji_moonphase(timestamp) abort
 endfunction
 
 
-function! sky_color_clock#statusline() abort
-    let now = get(g:, 'sky_color_clock#timestamp_force_override', localtime())
-    let bg = s:pick_bg_color(now)
+function! s:get_sky_colors(timestamp) abort
+    let bg = s:pick_bg_color(a:timestamp)
     let fg = s:pick_fg_color(bg)
 
     " Convert the RGB string into ANSI 256 color.
     let bg_t = s:to_ansi256_color(s:parse_rgb(bg))
     let fg_t = s:to_ansi256_color(s:parse_rgb(fg))
+
+    return [fg, bg, fg_t, bg_t]
+endfunction
+
+
+function! sky_color_clock#statusline() abort
+    let now = get(g:, 'sky_color_clock#timestamp_force_override', localtime())
+
+    let [fg, bg, fg_t, bg_t] = s:get_sky_colors(now)
 
     " Update highlight.
     execute printf('hi SkyColorClock guifg=%s guibg=%s ctermfg=%d ctermbg=%d ', fg, bg, fg_t, bg_t)
@@ -266,6 +273,42 @@ function! sky_color_clock#statusline() abort
     endif
 
     return str
+endfunction
+
+
+function! sky_color_clock#preview() abort
+    let now = localtime()
+    let base_timestamp = (now - (now % (24 * 60 * 60))) - (9 * 60 * 60)
+
+    tabnew
+    syntax clear
+
+    let cnt = 0
+    let last_colors = s:get_sky_colors(base_timestamp)
+    for h in range(0, 23)
+        for m in range(0, 55, 5)
+            let t = base_timestamp + (h * 60 * 60) + (m * 60)
+
+            let colors = s:get_sky_colors(t)
+
+            if last_colors == colors
+                continue
+            endif
+
+            let last_colors = colors
+            let [fg, bg, fg_t, bg_t] = colors
+            let str = strftime(g:sky_color_clock#datetime_format, t)
+
+            call append(cnt, str)
+
+            let group_name = printf('SkyColorClockPreview%d', cnt)
+            execute printf('hi %s guifg=%s guibg=%s ctermfg=%d ctermbg=%d', group_name, fg, bg, fg_t, bg_t)
+            execute printf('syntax keyword %s %s', group_name, escape(str, ' '))
+            execute printf('syntax match %s /%s/', group_name, escape(str, ' '))
+
+            let cnt += 1
+        endfor
+    endfor
 endfunction
 
 
@@ -285,24 +328,13 @@ let s:moonphase_emojis = [
             \ ]
 
 let g:sky_color_clock#latitude          = get(g:, 'sky_color_clock#latitude', 35)
-let g:sky_color_clock#color_stops       = get(g:, 'sky_color_clock#color_stops', s:default_color_stops())
+let g:sky_color_clock#color_stops       = get(g:, 'sky_color_clock#color_stops', s:default_color_stops(localtime()))
 let g:sky_color_clock#datetime_format   = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
 let g:sky_color_clock#enable_emoji_icon = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
 
 
 let s:enable_test = 0
 if s:enable_test
-    let g:bg = []
-    for h in range(1, 24)
-        let g:bg += [
-                    \ s:pick_bg_color(1516201200 + h * 60 * 60),
-                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 15 * 60),
-                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 30 * 60),
-                    \ s:pick_bg_color(1516201200 + h * 60 * 60 + 45 * 60)]
-    endfor
-    let g:fg = map(copy(g:bg), 's:pick_fg_color(v:val)')
-    let g:fg_bg = map(range(0, len(g:fg) - 1), '[g:fg[v:val], g:bg[v:val]]')
-
     call assert_equal('#000000', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 0.0])))
     call assert_equal('#ffffff', s:to_rgb_string(s:hsl_to_rgb([0.0, 0.0, 1.0])))
     call assert_equal('#ff0000', s:to_rgb_string(s:hsl_to_rgb([0.0, 1.0, 0.5])))
