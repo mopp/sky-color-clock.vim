@@ -5,11 +5,11 @@ Great, thanks to [zk-phi](https://github.com/zk-phi) !
 ## Examples
 For terminal.
 
-[[file:./images/cui.png]]
+![terminal vim](images/cui.png "terminal vim")
 
 For graphical.
 
-[[file:./images/gui.png]]
+![gui vim](images/gui.png "graphical vim")
 
 ## Feature
 - [X] A clock widget for statusline with sky color at the time.
