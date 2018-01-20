@@ -23,6 +23,9 @@ let g:lightline = {
             \ },
             \ }
 
+" You can preview the datetimes and colors.
+call sky_color_clock#preview()
+
 " For only test
 let g:sky_color_clock#timestamp_force_override = 1516201200 + 12 * 60 * 60 " 12:00:00
 
