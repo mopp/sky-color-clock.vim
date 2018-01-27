@@ -20,12 +20,12 @@ For graphical.
 call dein#add('mopp/sky-color-clock.vim')
 
 " set statusline to enable this plugin.
-set statusline+=%#SkyColorClock#%{sky_color_clock#statusline()}
+set statusline+=%#SkyColorClockTemp#\ %#SkyColorClock#%{sky_color_clock#statusline()}
 
 " For lightline.vim
 let g:lightline = {
             \ 'component': {
-            \   'sky_color_clock': "%#SkyColorClock#%{' ' . sky_color_clock#statusline() . ' '}",
+            \   'sky_color_clock': "%#SkyColorClock#%{' ' . sky_color_clock#statusline() . ' '}%#SkyColorClockTemp# ",
             \ },
             \ 'component_raw': {
             \   'sky_color_clock': 1,
@@ -43,4 +43,7 @@ let g:sky_color_clock#latitude
 let g:sky_color_clock#color_stops
 let g:sky_color_clock#datetime_format
 let g:sky_color_clock#enable_emoji_icon
+let g:sky_color_clock#openweathermap_api_key " or export OPENWEATHERMAP_API_KEY='hogehoge'
+let g:sky_color_clock#openweathermap_city_id
+let g:sky_color_clock#temperature_color_stops
 ```

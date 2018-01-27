@@ -9,6 +9,10 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+if exists('s:is_loaded')
+    finish
+endif
+let s:is_loaded = 1
 
 
 function! s:default_color_stops(timestamp) abort
@@ -30,7 +34,6 @@ function! s:default_color_stops(timestamp) abort
                 \ [sunset + 0.5,           "#111111"],
                 \ ]
 endfunction
-
 
 " degrees = radian * 180 / pi.
 function! s:rad_to_deg(r) abort
@@ -217,21 +220,16 @@ function! s:blend_color(base_color, mix_color, fraction) abort
 endfunction
 
 
-function! s:make_gradient(color_stops, time) abort
-    let [sec, min, hour] = split(strftime('%S,%M,%H', a:time), ',')
-    let m = sec / 60.0
-    let h = (m + min) / 60.0
-    let x = h + hour
-
+function! s:make_gradient(color_stops, x) abort
     let first_color = a:color_stops[0]
-    if x <= first_color[0]
+    if a:x <= first_color[0]
         return first_color[1]
     endif
 
     let last_color = a:color_stops[0]
     for next_color in a:color_stops
-        if x <= next_color[0]
-            let fraction = ((x - last_color[0]) / (next_color[0] - last_color[0]))
+        if a:x <= next_color[0]
+            let fraction = ((a:x - last_color[0]) / (next_color[0] - last_color[0]))
             return s:blend_color(last_color[1], next_color[1], fraction)
         endif
         let last_color = next_color
@@ -242,7 +240,11 @@ endfunction
 
 
 function! s:pick_bg_color(timestamp) abort
-    return s:make_gradient(g:sky_color_clock#color_stops, a:timestamp)
+    let [sec, min, hour] = split(strftime('%S,%M,%H', a:timestamp), ',')
+    let t = sec / 60.0
+    let x = ((t + min) / 60.0) + hour
+
+    return s:make_gradient(g:sky_color_clock#color_stops, x)
 endfunction
 
 
@@ -348,6 +350,36 @@ function! sky_color_clock#preview() abort
 endfunction
 
 
+function! s:get_current_weather_info() abort
+    if executable('curl')
+        let cmd = 'curl --silent'
+    elseif executable('wget')
+        let cmd = 'wget -q -O -'
+    else
+        throw 'curl and wget is not found !'
+    endif
+
+
+    let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
+                \ g:sky_color_clock#openweathermap_city_id,
+                \ g:sky_color_clock#openweathermap_api_key)
+    return eval(system(printf("%s '%s'", cmd, uri)))
+endfunction
+
+
+function! s:define_temperature_highlight() abort
+    try
+        let weather_dict = s:get_current_weather_info()
+        let temp = weather_dict.main.temp
+
+        let bg = s:make_gradient(g:sky_color_clock#temperature_color_stops, temp)
+        let bg_t = s:to_ansi256_color(bg)
+        execute printf('hi SkyColorClockTemp guibg=%s ctermbg=%d ', bg, bg_t)
+    catch /.*/
+    endtry
+endfunction
+
+
 " Local immutable variables.
 let s:pi = 3.14159265359
 let s:moonphase_cycle = 29.5306 " Eclipse (synodic month) cycle in days.
@@ -363,11 +395,22 @@ let s:moonphase_emojis = [
             \ [27.68, '🌘'],
             \ ]
 
-let g:sky_color_clock#latitude          = get(g:, 'sky_color_clock#latitude', 35)
-let g:sky_color_clock#color_stops       = get(g:, 'sky_color_clock#color_stops', s:default_color_stops(localtime()))
-let g:sky_color_clock#datetime_format   = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
-let g:sky_color_clock#enable_emoji_icon = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
+let g:sky_color_clock#latitude                = get(g:, 'sky_color_clock#latitude', 35)
+let g:sky_color_clock#color_stops             = get(g:, 'sky_color_clock#color_stops', s:default_color_stops(localtime()))
+let g:sky_color_clock#datetime_format         = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
+let g:sky_color_clock#enable_emoji_icon       = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
+let g:sky_color_clock#temperature_color_stops = get(g:, 'sky_color_clock#temperature_color_stops', [
+            \ [263, '#00a1ff'],
+            \ [288, '#ffffff'],
+            \ [313, '#ffa100']
+            \ ])
 
+let g:sky_color_clock#openweathermap_api_key = get(g:, 'sky_color_clock#openweathermap_api_key', expand('$OPENWEATHERMAP_API_KEY'))
+let g:sky_color_clock#openweathermap_city_id = get(g:, 'sky_color_clock#openweathermap_city_id', '1850144')
+
+if !empty(g:sky_color_clock#openweathermap_api_key)
+    call s:define_temperature_highlight()
+endif
 
 let s:enable_test = 0
 if s:enable_test
