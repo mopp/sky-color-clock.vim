@@ -282,8 +282,19 @@ function! s:get_sky_colors(timestamp) abort
 endfunction
 
 
+let s:last_update_timestamp = localtime()
+let s:statusline_cache = ''
+let s:update_threshold_ms = (1 * 60) * 1000
 function! sky_color_clock#statusline() abort
-    let now = get(g:, 'sky_color_clock#timestamp_force_override', localtime())
+    if exists('g:sky_color_clock#timestamp_force_override')
+        let now = g:sky_color_clock#timestamp_force_override
+    else
+        let now = localtime()
+        if ((now - s:last_update_timestamp) < s:update_threshold_ms) && !empty(s:statusline_cache)
+            return s:statusline_cache
+        endif
+        let s:last_update_timestamp = now
+    endif
 
     let [fg, bg, fg_t, bg_t] = s:get_sky_colors(now)
 
@@ -296,6 +307,7 @@ function! sky_color_clock#statusline() abort
         let str = printf("%s %s", s:get_emoji_moonphase(now), str)
     endif
 
+    let s:statusline_cache = str
     return str
 endfunction
 
