@@ -75,7 +75,7 @@ let g:sky_color_clock#temperature_color_stops = get(g:, 'sky_color_clock#tempera
             \ [313, '#ffa100']
             \ ])
 
-let g:sky_color_clock#openweathermap_api_key = get(g:, 'sky_color_clock#openweathermap_api_key', expand('$OPENWEATHERMAP_API_KEY'))
+let g:sky_color_clock#openweathermap_api_key = get(g:, 'sky_color_clock#openweathermap_api_key', exists('$OPENWEATHERMAP_API_KEY') ? expand('$OPENWEATHERMAP_API_KEY') : '')
 let g:sky_color_clock#openweathermap_city_id = get(g:, 'sky_color_clock#openweathermap_city_id', '1850144')
 
 
