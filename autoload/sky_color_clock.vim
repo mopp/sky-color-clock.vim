@@ -15,48 +15,19 @@ endif
 let s:is_loaded = 1
 
 
-function! s:default_color_stops(timestamp) abort
-    let sunset_time_from_noon = s:get_sunset_time_from_noon(a:timestamp)
-    let sunrise = 12 - sunset_time_from_noon
-    let sunset = 12 + sunset_time_from_noon
-    return [
-                \ [sunrise - 2.0,          "#111111"],
-                \ [sunrise - 1.5,          "#4d548a"],
-                \ [sunrise - 1.0,          "#c486b1"],
-                \ [sunrise - 0.5,          "#ee88a0"],
-                \ [sunrise,                "#ff7d75"],
-                \ [sunrise + 0.5,          "#f4eeef"],
-                \ [(sunset + sunrise) / 2, "#5dc9f1"],
-                \ [sunset - 1.5,           "#9eefe0"],
-                \ [sunset - 1.0,           "#f1e17c"],
-                \ [sunset - 0.5,           "#f86b10"],
-                \ [sunset,                 "#100028"],
-                \ [sunset + 0.5,           "#111111"],
-                \ ]
-endfunction
-
-" degrees = radian * 180 / pi.
-function! s:rad_to_deg(r) abort
-    return a:r * 180.0 / s:pi
-endfunction
-
-
-" radian = degrees * pi / 180.
-function! s:deg_to_rad(d) abort
-    return a:d * s:pi / 180.0
-endfunction
-
-
-function! s:get_sunset_time_from_noon(timestamp) abort
-    let current_year   = str2nr(strftime('%Y', a:timestamp))
-    let leap_count     = count(map(range(1970, current_year - 1), 'v:val % 400 == 0 || (v:val % 4 == 0 && v:val % 100 != 0)'), 1)
-    let day_of_year    = float2nr(a:timestamp / (24 * 60 * 60)) % 365 - leap_count - 1
-
-    let latitude = g:sky_color_clock#latitude
-    let sun_declination = s:deg_to_rad(-23.44 * (cos(s:deg_to_rad((360 / 365.0) * (day_of_year + 10)))))
-    let sunset_hour_angle = acos(-1 * tan(s:deg_to_rad(latitude) * tan(sun_declination)))
-    return 24.0 * (s:rad_to_deg(sunset_hour_angle) / 360.0)
-endfunction
+" Local immutable variables.
+let s:moonphase_cycle = 29.5306 " Eclipse (synodic month) cycle in days.
+let s:new_moon_base_timestamp = 6.8576 " A new moon (1970/01/08 05:35) in days since the epoch.
+let s:moonphase_emojis = [
+            \ [ 1.84, '🌑'],
+            \ [ 5.53, '🌒'],
+            \ [ 9.22, '🌓'],
+            \ [12.91, '🌔'],
+            \ [16.61, '🌕'],
+            \ [20.30, '🌖'],
+            \ [23.99, '🌗'],
+            \ [27.68, '🌘'],
+            \ ]
 
 
 " https://github.com/Qix-/color-convert/blob/427cbb70540bb9e5b3e94aa3bb9f97957ee5fbc0/conversions.js#L555-L580
@@ -108,7 +79,6 @@ endfunction
 function! s:color_to_6cube(v) abort
     return a:v < 48 ? 0 : a:v < 114 ? 1 : (a:v - 35) / 40
 endfunction
-
 
 
 " https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
@@ -379,34 +349,6 @@ function! s:define_temperature_highlight() abort
     endtry
 endfunction
 
-
-" Local immutable variables.
-let s:pi = 3.14159265359
-let s:moonphase_cycle = 29.5306 " Eclipse (synodic month) cycle in days.
-let s:new_moon_base_timestamp = 6.8576 " A new moon (1970/01/08 05:35) in days since the epoch.
-let s:moonphase_emojis = [
-            \ [ 1.84, '🌑'],
-            \ [ 5.53, '🌒'],
-            \ [ 9.22, '🌓'],
-            \ [12.91, '🌔'],
-            \ [16.61, '🌕'],
-            \ [20.30, '🌖'],
-            \ [23.99, '🌗'],
-            \ [27.68, '🌘'],
-            \ ]
-
-let g:sky_color_clock#latitude                = get(g:, 'sky_color_clock#latitude', 35)
-let g:sky_color_clock#color_stops             = get(g:, 'sky_color_clock#color_stops', s:default_color_stops(localtime()))
-let g:sky_color_clock#datetime_format         = get(g:, 'sky_color_clock#datetime_format', '%d %H:%M')
-let g:sky_color_clock#enable_emoji_icon       = get(g:, 'sky_color_clock#enable_emoji_icon', has('mac'))
-let g:sky_color_clock#temperature_color_stops = get(g:, 'sky_color_clock#temperature_color_stops', [
-            \ [263, '#00a1ff'],
-            \ [288, '#ffffff'],
-            \ [313, '#ffa100']
-            \ ])
-
-let g:sky_color_clock#openweathermap_api_key = get(g:, 'sky_color_clock#openweathermap_api_key', expand('$OPENWEATHERMAP_API_KEY'))
-let g:sky_color_clock#openweathermap_city_id = get(g:, 'sky_color_clock#openweathermap_city_id', '1850144')
 
 if !empty(g:sky_color_clock#openweathermap_api_key)
     call s:define_temperature_highlight()
