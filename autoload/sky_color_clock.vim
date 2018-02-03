@@ -256,31 +256,31 @@ endfunction
 
 let s:last_update_timestamp = localtime()
 let s:statusline_cache = ''
-let s:update_threshold_ms = (1 * 60) * 1000
 function! sky_color_clock#statusline() abort
     if exists('g:sky_color_clock#timestamp_force_override')
         let now = g:sky_color_clock#timestamp_force_override
     else
         let now = localtime()
-        if ((now - s:last_update_timestamp) < s:update_threshold_ms) && !empty(s:statusline_cache)
-            return s:statusline_cache
-        endif
-        let s:last_update_timestamp = now
     endif
+
+    let statusline = strftime(g:sky_color_clock#datetime_format, now)
+
+    if statusline ==# strftime(g:sky_color_clock#datetime_format, s:last_update_timestamp) && !empty(s:statusline_cache)
+        return s:statusline_cache
+    endif
+    let s:last_update_timestamp = now
 
     let [fg, bg, fg_t, bg_t] = s:get_sky_colors(now)
 
     " Update highlight.
     execute printf('hi SkyColorClock guifg=%s guibg=%s ctermfg=%d ctermbg=%d ', fg, bg, fg_t, bg_t)
 
-    let str = strftime(g:sky_color_clock#datetime_format, now)
-
     if g:sky_color_clock#enable_emoji_icon != 0
-        let str = printf("%s %s", s:get_emoji_moonphase(now), str)
+        let statusline = printf("%s %s", s:get_emoji_moonphase(now), statusline)
     endif
 
-    let s:statusline_cache = str
-    return str
+    let s:statusline_cache = statusline
+    return statusline
 endfunction
 
 
