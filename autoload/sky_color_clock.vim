@@ -333,7 +333,7 @@ function! s:get_current_weather_info() abort
     let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
                 \ g:sky_color_clock#openweathermap_city_id,
                 \ g:sky_color_clock#openweathermap_api_key)
-    return eval(system(printf("%s '%s'", cmd, uri)))
+    return eval(system(printf("%s %s", cmd, shellescape(uri))))
 endfunction
 
 
