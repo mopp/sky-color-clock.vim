@@ -79,10 +79,5 @@ let g:sky_color_clock#openweathermap_api_key = get(g:, 'sky_color_clock#openweat
 let g:sky_color_clock#openweathermap_city_id = get(g:, 'sky_color_clock#openweathermap_city_id', '1850144')
 
 
-" for preload.
-call sky_color_clock#statusline()
-
-
-
 let &cpo = s:save_cpo
 unlet s:save_cpo
