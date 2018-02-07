@@ -336,7 +336,7 @@ function! s:get_current_weather_info() abort
     if has('job')
         return job_start(printf("%s %s", cmd, shellescape(uri)), {'out_cb': function('s:apply_temperature_highlight')})
     else
-        return eval(system(printf("%s %s", cmd, shellescape(uri))))
+        return system(printf("%s %s", cmd, shellescape(uri)))
     endif
 endfunction
 
