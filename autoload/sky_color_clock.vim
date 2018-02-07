@@ -265,7 +265,7 @@ function! sky_color_clock#statusline() abort
 
     let statusline = strftime(g:sky_color_clock#datetime_format, now)
 
-    if statusline ==# strftime(g:sky_color_clock#datetime_format, s:last_update_timestamp) && !empty(s:statusline_cache)
+    if statusline ==# strftime(g:sky_color_clock#datetime_format, s:last_update_timestamp) && !empty(s:statusline_cache) && !empty(synIDattr(synIDtrans(hlID('SkyColorClock')), 'fg'))
         return s:statusline_cache
     endif
     let s:last_update_timestamp = now
