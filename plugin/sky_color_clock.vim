@@ -80,7 +80,9 @@ let g:sky_color_clock#openweathermap_city_id = get(g:, 'sky_color_clock#openweat
 
 
 " for preload.
-call sky_color_clock#statusline()
+augroup sky_color_clock
+    autocmd ColorScheme * call sky_color_clock#statusline()
+augroup END
 
 
 
