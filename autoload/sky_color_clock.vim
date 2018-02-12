@@ -322,9 +322,9 @@ endfunction
 
 function! s:get_current_weather_info() abort
     if executable('curl')
-        let cmd = 'curl --silent'
+        let cmd = 'curl --silent '
     elseif executable('wget')
-        let cmd = 'wget -q -O -'
+        let cmd = 'wget -q -O - '
     else
         throw 'curl and wget is not found !'
     endif
@@ -333,11 +333,10 @@ function! s:get_current_weather_info() abort
     let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
                 \ g:sky_color_clock#openweathermap_city_id,
                 \ g:sky_color_clock#openweathermap_api_key)
-    let cmd = printf("%s %s", cmd, shellescape(uri))
     if has('job')
-        return job_start(cmd, {'out_cb': function('s:apply_temperature_highlight')})
+        return job_start(cmd . uri, {'out_cb': function('s:apply_temperature_highlight')})
     else
-        return system(cmd)
+        return system(cmd . shellescape(uri))
     endif
 endfunction
 
