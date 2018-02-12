@@ -346,7 +346,7 @@ function! s:define_temperature_highlight() abort
     try
         let weather_res = s:get_current_weather_info()
         if type(weather_res) == v:t_string
-            call s:apply_temperature_highlight(v:none, weather_res)
+            call s:apply_temperature_highlight(-1, weather_res)
         endif
     catch /.*/
     endtry
