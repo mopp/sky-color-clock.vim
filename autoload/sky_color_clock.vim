@@ -333,10 +333,11 @@ function! s:get_current_weather_info() abort
     let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
                 \ g:sky_color_clock#openweathermap_city_id,
                 \ g:sky_color_clock#openweathermap_api_key)
+    let cmd = printf("%s %s", cmd, shellescape(uri))
     if has('job')
-        return job_start(printf("%s %s", cmd, shellescape(uri)), {'out_cb': function('s:apply_temperature_highlight')})
+        return job_start(cmd, {'out_cb': function('s:apply_temperature_highlight')})
     else
-        return system(printf("%s %s", cmd, shellescape(uri)))
+        return system(cmd)
     endif
 endfunction
 
