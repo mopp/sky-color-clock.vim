@@ -159,7 +159,7 @@ endfunction
 " https://hail2u.net/blog/software/convert-hex-color-to-functional-color-with-vim.html
 " (string) -> [float].
 function! s:parse_rgb(rgb) abort
-    let rgb = matchlist(a:rgb, '\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)')[1:3]
+    let rgb = matchlist(a:rgb, '\c\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)')[1:3]
     return map(rgb, 'str2nr(v:val, 16) / 255.0')
 endfunction
 
