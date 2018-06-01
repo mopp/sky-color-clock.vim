@@ -322,9 +322,9 @@ endfunction
 
 function! s:get_current_weather_info() abort
     if executable('curl')
-        let cmd = 'curl --silent'
+        let cmd = 'curl --silent '
     elseif executable('wget')
-        let cmd = 'wget -q -O -'
+        let cmd = 'wget -q -O - '
     else
         throw 'curl and wget is not found !'
     endif
@@ -333,20 +333,32 @@ function! s:get_current_weather_info() abort
     let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
                 \ g:sky_color_clock#openweathermap_city_id,
                 \ g:sky_color_clock#openweathermap_api_key)
-    return eval(system(printf("%s %s", cmd, shellescape(uri))))
+    if has('job')
+        return job_start(cmd . uri, {'out_cb': function('s:apply_temperature_highlight')})
+    else
+        return system(cmd . shellescape(uri))
+    endif
 endfunction
 
 
 function! s:define_temperature_highlight() abort
     try
-        let weather_dict = s:get_current_weather_info()
-        let temp = weather_dict.main.temp
-
-        let bg = s:make_gradient(g:sky_color_clock#temperature_color_stops, temp)
-        let bg_t = s:to_ansi256_color(bg)
-        execute printf('hi SkyColorClockTemp guibg=%s ctermbg=%d ', bg, bg_t)
+        let weather_res = s:get_current_weather_info()
+        if type(weather_res) == v:t_string
+            call s:apply_temperature_highlight(-1, weather_res)
+        endif
     catch /.*/
     endtry
+endfunction
+
+
+function! s:apply_temperature_highlight(ch, out) abort
+    let weather_dict = eval(a:out)
+    let temp = weather_dict.main.temp
+
+    let bg = s:make_gradient(g:sky_color_clock#temperature_color_stops, temp)
+    let bg_t = s:to_ansi256_color(bg)
+    execute printf('hi SkyColorClockTemp guibg=%s ctermbg=%d ', bg, bg_t)
 endfunction
 
 
