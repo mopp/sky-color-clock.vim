@@ -405,9 +405,9 @@ if s:enable_test
     " call assert_equal([180.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#008080')))
     " call assert_equal([240.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#000080')))
 
-    call assert_equal('倦', s:get_emoji_moonphase(592500))
-    call assert_equal('倦', s:get_emoji_moonphase(1516155430))
-    call assert_equal('兼', s:get_emoji_moonphase(1516846630))
+    call assert_equal('🌑', s:get_emoji_moonphase(592500))
+    call assert_equal('🌑', s:get_emoji_moonphase(1516155430))
+    call assert_equal('🌓', s:get_emoji_moonphase(1516846630))
 
     if !empty(v:errors)
         for err in v:errors
