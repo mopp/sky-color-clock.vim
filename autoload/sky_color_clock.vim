@@ -330,9 +330,11 @@ function! s:get_current_weather_info() abort
     endif
 
 
+    let quote = &shellxquote ==# '"' ?  "'" : '"'
     let uri = printf('http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s',
                 \ g:sky_color_clock#openweathermap_city_id,
                 \ g:sky_color_clock#openweathermap_api_key)
+    let uri = quote.uri.quote
     if has('job')
         return job_start(cmd . uri, {'out_cb': function('s:apply_temperature_highlight')})
     else
@@ -348,6 +350,7 @@ function! s:define_temperature_highlight() abort
             call s:apply_temperature_highlight(-1, weather_res)
         endif
     catch /.*/
+        " echomsg 'sky-color:exception:'.v:exception
     endtry
 endfunction
 
@@ -402,9 +405,9 @@ if s:enable_test
     " call assert_equal([180.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#008080')))
     " call assert_equal([240.0 / 360.0, 1.0, 0.25], s:rgb_to_hsl(s:parse_rgb('#000080')))
 
-    call assert_equal('🌑', s:get_emoji_moonphase(592500))
-    call assert_equal('🌑', s:get_emoji_moonphase(1516155430))
-    call assert_equal('🌓', s:get_emoji_moonphase(1516846630))
+    call assert_equal('倦', s:get_emoji_moonphase(592500))
+    call assert_equal('倦', s:get_emoji_moonphase(1516155430))
+    call assert_equal('兼', s:get_emoji_moonphase(1516846630))
 
     if !empty(v:errors)
         for err in v:errors
