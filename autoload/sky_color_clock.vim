@@ -311,8 +311,8 @@ function! sky_color_clock#preview() abort
 
             let group_name = printf('SkyColorClockPreview%d', cnt)
             execute printf('hi %s guifg=%s guibg=%s ctermfg=%d ctermbg=%d', group_name, fg, bg, fg_t, bg_t)
-            execute printf('syntax keyword %s %s', group_name, escape(str, ' '))
-            execute printf('syntax match %s /%s/', group_name, escape(str, ' '))
+            execute printf('syntax keyword %s %s', group_name, escape(str, '/ '))
+            execute printf('syntax match %s /%s/', group_name, escape(str, '/ '))
 
             let cnt += 1
         endfor
